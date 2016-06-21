@@ -19,6 +19,8 @@
 </div>
 <div class="statisticBox w-782"  layout:fragment="content">
     <form id="queryForm" method="get">
+        <input type="hidden" name="editrole" id="editrole" th:value="${editrole}"/>
+        <input type="hidden" name="deleterole" id="deleterole" th:value="${deleterole}"/>
     <div class="radiusGrayBox782">
         <div class="radiusGrayTop782"></div>
         <div class="radiusGrayMid782">
@@ -36,7 +38,7 @@
         </div>
     </div>
     </form>
-    <div class="newBtnBox">
+    <div class="newBtnBox" th:if="${newrole}">
         <a id="addUserInf" class="blueBtn-62X30" href="javascript:void(0)">新增</a>
     </div>
     <div class="dataDetailList mt-12">

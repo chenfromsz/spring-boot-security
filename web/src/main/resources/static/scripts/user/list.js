@@ -58,16 +58,26 @@ var pageselectCallback = function(page_index, jq, size){
 }
 //填充分页数据
 function fillData(data){
+    var editrole = $("#editrole").val();
+    var deleterole = $("#deleterole").val();
+
     var $list = $('#tbodyContent').empty();
-    $.each(data,function(k,v){
-        var html = "" ;
+    $.each(data,function(k,v) {
+        var html = "";
         html += '<tr> ' +
-            '<td>'+ (v.id==null?'':v.id) +'</td>' +
-            '<td>'+ (v.name==null?'':v.name) +'</td>' +
-            '<td>'+ (v.email==null?'':v.email) +'</td>' +
-            '<td>'+ (v.createdate==null?'': getSmpFormatDateByLong(v.createdate,true)) +'</td>';
-        html += '<td><a class="c-50a73f mlr-6" href="javascript:void(0)" onclick="showDetail(\''+ v.id+'\')">查看</a><a class="c-50a73f mlr-6" href="javascript:void(0)" onclick="edit(\''+ v.id+'\')">修改</a><a class="c-50a73f mlr-6" href="javascript:void(0)" onclick="del(\''+ v.id+'\')">删除</a></td>';
-        html +='</tr>' ;
+            '<td>' + (v.id == null ? '' : v.id) + '</td>' +
+            '<td>' + (v.name == null ? '' : v.name) + '</td>' +
+            '<td>' + (v.email == null ? '' : v.email) + '</td>' +
+            '<td>' + (v.createdate == null ? '' : getSmpFormatDateByLong(v.createdate, true)) + '</td>';
+        html += '<td><a class="c-50a73f mlr-6" href="javascript:void(0)" onclick="showDetail(\'' + v.id + '\')">查看</a>';
+
+        if (editrole == 'true')
+            html += '<a class="c-50a73f mlr-6" href="javascript:void(0)" onclick="edit(\'' + v.id + '\')">修改</a>';
+
+        if(deleterole == 'true')
+            html += '<a class="c-50a73f mlr-6" href="javascript:void(0)" onclick="del(\''+ v.id+'\')">删除</a>';
+
+        html +='</td></tr>' ;
 
         $list.append($(html));
     });
@@ -153,4 +163,23 @@ function create(){
 
 function closeDialog() {
     artdialog.close();
+}
+
+function contains(string, substr, isIgnoreCase) {
+    if (isIgnoreCase) {
+        string = string.toLowerCase();
+        substr = substr.toLowerCase();
+    }
+    var startChar = substr.substring(0, 1);
+    var strLen = substr.length;
+    for (var j = 0; j < string.length - strLen + 1; j++) {
+        if (string.charAt(j) == startChar) //如果匹配起始字符,开始查找
+        {
+            if (string.substring(j, j + strLen) == substr) //如果从j开始的字符与str匹配，那ok
+            {
+                return true;
+            }
+        }
+    }
+    return false;
 }

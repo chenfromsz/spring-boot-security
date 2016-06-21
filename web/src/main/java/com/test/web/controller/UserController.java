@@ -10,22 +10,24 @@ import com.test.mysql.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Controller
 @RequestMapping("/user")
@@ -39,8 +41,57 @@ public class UserController {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Value("${securityconfig.urlroles}")
+    private String urlroles;
+
     @RequestMapping("/index")
     public String index(ModelMap model, Principal user) throws Exception{
+        Authentication authentication = (Authentication)user;
+        List<String> userroles = new ArrayList<>();
+        for(GrantedAuthority ga : authentication.getAuthorities()){
+            userroles.add(ga.getAuthority());
+        }
+
+        boolean newrole=false,editrole=false,deleterole=false;
+        if(!StringUtils.isEmpty(urlroles)) {
+            String[] resouces = urlroles.split(";");
+            for (String resource : resouces) {
+                String[] urls = resource.split("=");
+                if(urls[0].indexOf("new") > 0){
+                    String[] newroles = urls[1].split(",");
+                    for(String str : newroles){
+                        str = str.trim();
+                        if(userroles.contains(str)){
+                            newrole = true;
+                            break;
+                        }
+                    }
+                }else if(urls[0].indexOf("edit") > 0){
+                    String[] editoles = urls[1].split(",");
+                    for(String str : editoles){
+                        str = str.trim();
+                        if(userroles.contains(str)){
+                            editrole = true;
+                            break;
+                        }
+                    }
+                }else if(urls[0].indexOf("delete") > 0){
+                    String[] deleteroles = urls[1].split(",");
+                    for(String str : deleteroles){
+                        str = str.trim();
+                        if(userroles.contains(str)){
+                            deleterole = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        model.addAttribute("newrole", newrole);
+        model.addAttribute("editrole", editrole);
+        model.addAttribute("deleterole", deleterole);
+
         model.addAttribute("user", user);
         return "user/index";
     }
