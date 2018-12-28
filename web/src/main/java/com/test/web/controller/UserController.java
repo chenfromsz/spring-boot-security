@@ -4,9 +4,9 @@ import com.test.mysql.entity.Department;
 import com.test.mysql.entity.Role;
 import com.test.mysql.entity.User;
 import com.test.mysql.model.UserQo;
-import com.test.mysql.repository.DepartmentRepository;
-import com.test.mysql.repository.RoleRepository;
-import com.test.mysql.repository.UserRepository;
+import com.test.mysql.services.DepartmentService;
+import com.test.mysql.services.RoleService;
+import com.test.mysql.services.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,11 +35,11 @@ public class UserController {
     private static Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
     @Autowired
-    private DepartmentRepository departmentRepository;
+    private DepartmentService departmentService;
     @Autowired
-    private RoleRepository roleRepository;
+    private RoleService roleService;
 
     @Value("${securityconfig.urlroles}")
     private String urlroles;
@@ -98,7 +98,7 @@ public class UserController {
 
     @RequestMapping(value="/{id}")
     public String show(ModelMap model,@PathVariable Long id) {
-        User user = userRepository.findOne(id);
+        User user = userService.findOne(id);
         model.addAttribute("user",user);
         return "user/show";
     }
@@ -107,8 +107,9 @@ public class UserController {
     @ResponseBody
     public Page<User> getList(UserQo userQo) {
         try {
-            Pageable pageable = new PageRequest(userQo.getPage(), userQo.getSize(), new Sort(Sort.Direction.ASC, "id"));
-            return userRepository.findByName(userQo.getName()==null?"%":"%"+userQo.getName()+"%", pageable);
+            Sort sort = Sort.by(Sort.Direction.DESC, "id");
+            Pageable pageable  = PageRequest.of(userQo.getPage(), userQo.getSize(), sort);
+            return userService.findAll(userQo, pageable);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -117,8 +118,8 @@ public class UserController {
 
     @RequestMapping("/new")
     public String create(ModelMap model,User user){
-        List<Department> departments = departmentRepository.findAll();
-        List<Role> roles = roleRepository.findAll();
+        List<Department> departments = departmentService.findAll();
+        List<Role> roles = roleService.findAll();
 
         model.addAttribute("departments",departments);
         model.addAttribute("roles", roles);
@@ -132,17 +133,17 @@ public class UserController {
         user.setCreatedate(new Date());
         BCryptPasswordEncoder bpe = new BCryptPasswordEncoder();
         user.setPassword(bpe.encode(user.getPassword()));
-        userRepository.save(user);
+        userService.save(user);
         logger.info("新增->ID="+user.getId());
         return "1";
     }
 
     @RequestMapping(value="/edit/{id}")
     public String update(ModelMap model,@PathVariable Long id){
-        User user = userRepository.findOne(id);
+        User user = userService.findOne(id);
 
-        List<Department> departments = departmentRepository.findAll();
-        List<Role> roles = roleRepository.findAll();
+        List<Department> departments = departmentService.findAll();
+        List<Role> roles = roleService.findAll();
 
         List<Long> rids = new ArrayList<Long>();
         for(Role role : user.getRoles()){
@@ -159,7 +160,7 @@ public class UserController {
     @RequestMapping(method = RequestMethod.POST, value="/update")
     @ResponseBody
     public String update(User user) throws Exception{
-        userRepository.save(user);
+        userService.save(user);
         logger.info("修改->ID="+user.getId());
         return "1";
     }
@@ -167,7 +168,7 @@ public class UserController {
     @RequestMapping(value="/delete/{id}",method = RequestMethod.GET)
     @ResponseBody
     public String delete(@PathVariable Long id) throws Exception{
-        userRepository.delete(id);
+        userService.delete(id);
         logger.info("删除->ID="+id);
         return "1";
     }
